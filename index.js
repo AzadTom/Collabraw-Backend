@@ -13,7 +13,6 @@ app.get('/', (req, res) => {
     res.json({ message: "server is running" })
 });
 
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
