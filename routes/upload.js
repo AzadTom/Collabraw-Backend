@@ -1,5 +1,5 @@
 import express from "express";
-import fs from "fs";
+import fs from "fs/promises";
 import upload from "../middleware/upload.js";
 import cloudinary from "../utils/cloudnary.js";
 
@@ -9,6 +9,8 @@ router.post(
   "/",
   upload.single("image"),
   async (req, res) => {
+    const tempPath = req.file?.path;
+
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -16,10 +18,7 @@ router.post(
         });
       }
 
-      const result = await cloudinary.uploader.upload(req.file.path);
-
-      // delete temporary file
-      fs.unlinkSync(req.file.path);
+      const result = await cloudinary.uploader.upload(tempPath);
 
       res.json({
         imageUrl: result.secure_url,
@@ -30,6 +29,14 @@ router.post(
       res.status(500).json({
         message: "Upload failed",
       });
+    } finally {
+      if (tempPath) {
+        try {
+          await fs.unlink(tempPath);
+        } catch (cleanupError) {
+          console.error("Failed to delete temporary file:", cleanupError);
+        }
+      }
     }
   }
 );
@@ -44,11 +51,17 @@ router.post("/multiple", upload.array("images", 10), async (req, res) => {
 
     const imageUrls = await Promise.all(
       req.files.map(async (file) => {
-        const result = await cloudinary.uploader.upload(file.path);
+        try {
+          const result = await cloudinary.uploader.upload(file.path);
 
-        fs.unlinkSync(file.path);
-
-        return result.secure_url;
+          return result.secure_url;
+        } finally {
+          try {
+            await fs.unlink(file.path);
+          } catch (cleanupError) {
+            console.error("Failed to delete temporary file:", cleanupError);
+          }
+        }
       })
     );
 
