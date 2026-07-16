@@ -2,9 +2,17 @@ import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
+import upload from './routes/upload.js';
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+app.use("/api/v1/upload",upload);
+
+app.get('/', (req, res) => {
+    res.json({ message: "server is running" })
+});
+
 
 const server = http.createServer(app);
 
@@ -41,7 +49,7 @@ io.on('connection', (socket) => {
 
     });
 
-      socket.on("circle-update", (data) => {
+    socket.on("circle-update", (data) => {
         socket.broadcast.emit("circle-update", data);
     });
 
@@ -52,7 +60,7 @@ io.on('connection', (socket) => {
 
     });
 
-    socket.on("arrow-update",(data)=>{
+    socket.on("arrow-update", (data) => {
         socket.broadcast.emit("arrow-update", data);
     })
 
@@ -66,16 +74,29 @@ io.on('connection', (socket) => {
         socket.broadcast.emit("scribble-update", data);
     });
 
-    socket.on("text",(data)=>{
+    socket.on("text", (data) => {
         socket.broadcast.emit("ontext", data);
     });
+
+    socket.on("history-commit", (data) => {
+        socket.broadcast.emit("history-commit", data);
+    });
+
+    socket.on("history-undo", () => {
+        socket.broadcast.emit("history-undo");
+    });
+
+    socket.on("history-redo", () => {
+        socket.broadcast.emit("history-redo");
+    });
+
+
+    socket.on("image-update", (data) => {
+        socket.broadcast.emit("image-update", data);
+    });
+
+
 })
-
-
-app.get('/', (req, res) => {
-    res.json({ message: "server is running" })
-})
-
 
 server.listen(3001, () => {
     console.log("server is running on port 3001");
