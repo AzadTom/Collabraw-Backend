@@ -7,7 +7,7 @@ import upload from './routes/upload.js';
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use("/api/v1/upload",upload);
+app.use("/api/v1/upload", upload);
 
 app.get('/', (req, res) => {
     res.json({ message: "server is running" })
@@ -92,6 +92,10 @@ io.on('connection', (socket) => {
 
     socket.on("image-update", (data) => {
         socket.broadcast.emit("image-update", data);
+    });
+
+    socket.on("cursor:move", (cursor) => {
+        socket.broadcast.emit("cursor:move", cursor);
     });
 
 
