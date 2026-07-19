@@ -23,9 +23,14 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
 
-    socket.on("join-room", (roomId) => {
+    socket.on("join-room", async (roomId) => {
         socket.join(roomId);
         socket.to(roomId).emit("user-joined");
+        const clients = await io.in(roomId).fetchSockets();
+        if (clients.length >= 5) {
+            socket.emit("room-full");
+            return;
+        }
         console.log(`Socket ${socket.id} joined room: ${roomId}`);
     });
 
