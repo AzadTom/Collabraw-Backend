@@ -34,6 +34,15 @@ io.on('connection', (socket) => {
         console.log(`Socket ${socket.id} joined room: ${roomId}`);
     });
 
+     socket.on("chat:message", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("chat:message", data.message || data);
+        } else {
+            socket.broadcast.emit("chat:message", data);
+        }
+    });
+    
+
     socket.on("rectangle", (data) => {
         if (data?.roomId) {
             socket.to(data.roomId).emit("onrectangle", data.rectangle || data);
