@@ -23,83 +23,139 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
 
-    socket.on("client-ready", () => {
-
-        console.log("connected!");
-        socket.broadcast.emit("server-ready");
-
+    socket.on("join-room", async (roomId) => {
+        socket.join(roomId);
+        socket.to(roomId).emit("user-joined");
+        const clients = await io.in(roomId).fetchSockets();
+        if (clients.length >= 5) {
+            socket.emit("room-full");
+            return;
+        }
+        console.log(`Socket ${socket.id} joined room: ${roomId}`);
     });
 
+     socket.on("chat:message", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("chat:message", data.message || data);
+        } else {
+            socket.broadcast.emit("chat:message", data);
+        }
+    });
+    
 
-    socket.on('rectangle', (rect) => {
-
-        socket.broadcast.emit('onrectangle', rect);
-
+    socket.on("rectangle", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("onrectangle", data.rectangle || data);
+        } else {
+            socket.broadcast.emit("onrectangle", data);
+        }
     });
 
     socket.on("rect-update", (data) => {
-        socket.broadcast.emit("rect-update", data);
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("rect-update", { id: data.id, props: data.props });
+        } else {
+            socket.broadcast.emit("rect-update", data);
+        }
     });
 
-
-    socket.on('circle', (circle) => {
-
-        socket.broadcast.emit('oncircle', circle);
-
+    socket.on("circle", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("oncircle", data.circle || data);
+        } else {
+            socket.broadcast.emit("oncircle", data);
+        }
     });
 
     socket.on("circle-update", (data) => {
-        socket.broadcast.emit("circle-update", data);
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("circle-update", { id: data.id, props: data.props });
+        } else {
+            socket.broadcast.emit("circle-update", data);
+        }
     });
 
-
-    socket.on('arrow', (arrow) => {
-
-        socket.broadcast.emit('onarrow', arrow);
-
+    socket.on("arrow", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("onarrow", data.arrow || data);
+        } else {
+            socket.broadcast.emit("onarrow", data);
+        }
     });
 
     socket.on("arrow-update", (data) => {
-        socket.broadcast.emit("arrow-update", data);
-    })
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("arrow-update", { id: data.id, props: data.props });
+        } else {
+            socket.broadcast.emit("arrow-update", data);
+        }
+    });
 
-    socket.on('scribble', (scribble) => {
-
-        socket.broadcast.emit('onscribble', scribble);
-
+    socket.on("scribble", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("onscribble", data.scribble || data);
+        } else {
+            socket.broadcast.emit("onscribble", data);
+        }
     });
 
     socket.on("scribble-update", (data) => {
-        socket.broadcast.emit("scribble-update", data);
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("scribble-update", { id: data.id, props: data.props });
+        } else {
+            socket.broadcast.emit("scribble-update", data);
+        }
     });
 
     socket.on("text", (data) => {
-        socket.broadcast.emit("ontext", data);
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("ontext", data.textItem || data);
+        } else {
+            socket.broadcast.emit("ontext", data);
+        }
     });
 
     socket.on("history-commit", (data) => {
-        socket.broadcast.emit("history-commit", data);
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("history-commit", data.state || data);
+        } else {
+            socket.broadcast.emit("history-commit", data);
+        }
     });
 
-    socket.on("history-undo", () => {
-        socket.broadcast.emit("history-undo");
+    socket.on("history-undo", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("history-undo");
+        } else {
+            socket.broadcast.emit("history-undo");
+        }
     });
 
-    socket.on("history-redo", () => {
-        socket.broadcast.emit("history-redo");
+    socket.on("history-redo", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("history-redo");
+        } else {
+            socket.broadcast.emit("history-redo");
+        }
     });
-
 
     socket.on("image-update", (data) => {
-        socket.broadcast.emit("image-update", data);
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("image-update", { id: data.id, props: data.props });
+        } else {
+            socket.broadcast.emit("image-update", data);
+        }
     });
 
-    socket.on("cursor:move", (cursor) => {
-        socket.broadcast.emit("cursor:move", cursor);
+    socket.on("cursor:move", (data) => {
+        if (data?.roomId) {
+            socket.to(data.roomId).emit("cursor:move", data.cursor || data);
+        } else {
+            socket.broadcast.emit("cursor:move", data);
+        }
     });
 
-
-})
+});
 
 server.listen(3001, () => {
     console.log("server is running on port 3001");
